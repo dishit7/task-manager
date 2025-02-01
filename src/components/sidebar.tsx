@@ -69,20 +69,27 @@ export function Sidebar() {
           ))}
         </div>
           </div>
-         <div className="mt-auto flex flex-col items-center">
-        <div className="text-sm font-semibold text-gray-600 dark:text-gray-200 mb-2">
-          Toggle Theme
-        </div>
+        
+      {/* Theme Toggle Button */}
+      <div className="mt-auto flex flex-col items-center">
         <Button 
-          variant="ghost" 
+          variant="outline" 
           size="lg"  
           onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-          className="p-4 bg-sidebarHover dark:bg-sidebarHover-dark rounded-full hover:bg-sidebarHover dark:hover:bg-sidebarHover-dark focus:outline-none border-2 border-gray-400"
+          className="w-full flex items-center justify-center p-4 rounded-lg bg-sidebarHover dark:bg-sidebarHover-dark hover:bg-sidebarHover dark:hover:bg-sidebarHover-dark focus:outline-none border border-gray-300 dark:border-gray-600 my-7"
           aria-label="Toggle theme"
         >
-          {theme === "dark" ? <SunIcon className="h-10 w-10 text-yellow-500" /> : <MoonIcon className="h-10 w-10 text-gray-800" />}
+          {theme === "dark" ? (
+            <SunIcon className="h-6 w-6 text-yellow-500" />
+          ) : (
+            <MoonIcon className="h-6 w-6 text-gray-800" />
+          )}
+          <span className="ml-2 text-sm font-semibold text-gray-600 dark:text-gray-200">
+            {theme === "dark" ? "Light Mode" : "Dark Mode"}
+          </span>
         </Button>
       </div>
+
     </aside>
   );
 }

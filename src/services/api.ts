@@ -3,21 +3,25 @@ import axios from 'axios';
 import { Task, Project } from '@/types/types';
 
 export const taskService = {
-    getAll: async () => {
-    const response = await fetch('/api/tasks'); // Fetch all tasks for the user
+  create: async (taskData: Partial<Task>) => {
+    const { data } = await axios.post<Task>('/api/tasks', taskData);
+    return data;
+  },
+
+  getAll: async (userId: string) => {
+    const response = await fetch(`/api/tasks?userId=${userId}`);
     if (!response.ok) {
       throw new Error('Failed to fetch tasks');
     }
     return response.json();
   },
-  getByProject: async (projectId: number) => {
-    const { data } = await axios.get<Task[]>(`/api/tasks?projectId=${projectId}`);
-    return data;
-  },
-  
-  create: async (taskData: Partial<Task>) => {
-    const { data } = await axios.post<Task>('/api/tasks', taskData);
-    return data;
+
+  getByProject: async (projectId: number, userId: string) => {
+    const response = await fetch(`/api/tasks?projectId=${projectId}&userId=${userId}`);
+    if (!response.ok) {
+      throw new Error('Failed to fetch project tasks');
+    }
+    return response.json();
   },
   
   update: async (taskId: number, updateData: Partial<Task>) => {

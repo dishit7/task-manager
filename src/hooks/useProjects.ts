@@ -20,7 +20,7 @@ export function useProjects(userId?: string) {
     onSuccess: (newProject) => {
        queryClient.invalidateQueries({ queryKey: ['projects', userId] });
 
-       queryClient.setQueryData(['projects', userId], (oldData: Project[] | undefined) => {
+      queryClient.setQueryData(['projects', userId], (oldData: Project[] | undefined) => {
         return oldData ? [...oldData, newProject] : [newProject];
       });
     },
