@@ -1,94 +1,67 @@
-import { create } from 'zustand'; // Zustand for state management
-import { immer } from 'zustand/middleware/immer'; // Optional for immutability
-
-// Define the Project and Task interfaces
-
-interface Project {
-  id: string;
-  name: string;
-  // Add other properties as per your project structure
-}
-
-interface Task {
-  id: string;
-  name: string;
-  projectId: string; // Add other properties as needed
-}
-
+// stores/modalStore.ts
+import { create } from 'zustand';
+import { Task, Project } from '@/types';
 
 interface ModalStore {
-  // Project Modals
-  isProjectCreateModalOpen: boolean;
-  isProjectEditModalOpen: boolean;
+  // Modal visibility states
+  isCreateProjectOpen: boolean;
+  isEditProjectOpen: boolean;
+  isCreateTaskOpen: boolean;
+  isEditTaskOpen: boolean;
   
-  // Task Modals
-  isTaskCreateModalOpen: boolean;
-  isTaskEditModalOpen: boolean;
+  // Data for edit modals
+  selectedTask: Task | null;
+  selectedProject: Project | null;
   
-  // Selected Item for Edit Modals
-  selectedProjectToEdit: Project | null;
-  selectedTaskToEdit: Task | null;
+  // Open actions
+  openCreateProject: () => void;
+  openEditProject: (project: Project) => void;
+  openCreateTask: () => void;
+  openEditTask: (task: Task) => void;
   
-  // Modal Control Actions
-  openProjectCreateModal: () => void;
-  closeProjectCreateModal: () => void;
-  
-  openProjectEditModal: (project: Project) => void;
-  closeProjectEditModal: () => void;
-  
-  openTaskCreateModal: (projectId?: string) => void;
-  closeTaskCreateModal: () => void;
-  
-  openTaskEditModal: (task: Task) => void;
-  closeTaskEditModal: () => void;
+  // Close actions
+  closeCreateProject: () => void;
+  closeEditProject: () => void;
+  closeCreateTask: () => void;
+  closeEditTask: () => void;
 }
 
 export const useModalStore = create<ModalStore>((set) => ({
-  // Project Modal States
-  isProjectCreateModalOpen: false,
-  isProjectEditModalOpen: false,
-  selectedProjectToEdit: null,
+  // Initial states
+  isCreateProjectOpen: false,
+  isEditProjectOpen: false,
+  isCreateTaskOpen: false,
+  isEditTaskOpen: false,
+  selectedTask: null,
+  selectedProject: null,
   
-  // Task Modal States
-  isTaskCreateModalOpen: false,
-  isTaskEditModalOpen: false,
-  selectedTaskToEdit: null,
+  // Open actions
+  openCreateProject: () => set({ isCreateProjectOpen: true }),
+  openEditProject: (project) => set({ 
+    isEditProjectOpen: true,
+    selectedProject: project
+  }),
+ openCreateTask: () => {
+  console.log("Opening Create Task Modal"); // Debugging
+  set({ isCreateTaskOpen: true });
+},
+  openEditTask: (task) => {
+    console.log("opening edit odal")
+    set({
+      isEditTaskOpen: true,
+      selectedTask: task
+    })
+},
   
-  // Project Modal Actions
-  openProjectCreateModal: () => set({ 
-    isProjectCreateModalOpen: true 
+  // Close actions
+  closeCreateProject: () => set({ isCreateProjectOpen: false }),
+  closeEditProject: () => set({ 
+    isEditProjectOpen: false,
+    selectedProject: null
   }),
-  closeProjectCreateModal: () => set({ 
-    isProjectCreateModalOpen: false 
-  }),
-  
-  openProjectEditModal: (project) => set({ 
-    isProjectEditModalOpen: true,
-    selectedProjectToEdit: project 
-  }),
-  closeProjectEditModal: () => set({ 
-    isProjectEditModalOpen: false,
-    selectedProjectToEdit: null 
-  }),
-  
-  // Task Modal Actions
-  openTaskCreateModal: (projectId) => set({ 
-    isTaskCreateModalOpen: true,
-    // Optionally set a default project context
-    selectedProjectToEdit: projectId 
-      ? { id: projectId } as Project 
-      : null
-  }),
-  closeTaskCreateModal: () => set({ 
-    isTaskCreateModalOpen: false 
-  }),
-  
-  openTaskEditModal: (task) => set({ 
-    isTaskEditModalOpen: true,
-    selectedTaskToEdit: task 
-  }),
-  closeTaskEditModal: () => set({ 
-    isTaskEditModalOpen: false,
-    selectedTaskToEdit: null 
-  }),
+  closeCreateTask: () => set({ isCreateTaskOpen: false }),
+  closeEditTask: () => set({
+    isEditTaskOpen: false,
+    selectedTask: null
+  })
 }));

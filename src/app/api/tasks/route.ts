@@ -7,22 +7,21 @@ import { eq } from 'drizzle-orm';
 // Get Tasks
 export async function GET(request: NextRequest) {
   try {
-    const projectId = request.nextUrl.searchParams.get('projectId');
-    
-    if (!projectId) {
-      return NextResponse.json({ error: 'Project ID is required' }, { status: 400 });
-    }
+    const projectId = request.nextUrl.searchParams.get("projectId");
 
-    const projectTasks = await db.query.tasks.findMany({
-      where: eq(tasks.projectId, parseInt(projectId))
-    });
+    const projectTasks = projectId
+      ? await db.query.tasks.findMany({
+          where: eq(tasks.projectId, parseInt(projectId)),
+        })
+      : await db.query.tasks.findMany(); // Fetch all tasks if projectId is not provided
 
     return NextResponse.json(projectTasks);
   } catch (error) {
-    console.error('Error fetching tasks:', error);
-    return NextResponse.json({ error: 'Failed to fetch tasks' }, { status: 500 });
+    console.error("Error fetching tasks:", error);
+    return NextResponse.json({ error: "Failed to fetch tasks" }, { status: 500 });
   }
 }
+
 
 // Create Task
 export async function POST(request: NextRequest) {

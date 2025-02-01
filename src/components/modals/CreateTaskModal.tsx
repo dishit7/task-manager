@@ -1,28 +1,44 @@
-"use client"
-import { useState } from 'react';
-import { useParams } from 'next/navigation';
-import { useTaskStore } from '@/stores/taskStore';
-import { useModalStore } from '@/stores/modalStore';
+"use client";
+
+import { useState } from "react";
+import { useParams } from "next/navigation";
+import { useModalStore } from "@/stores/modalStore";
+import { useTasks } from "@/hooks/useTasks";
 
 export function CreateTaskModal() {
   const { projectId } = useParams();
-  const { createTask } = useTaskStore();
-  const { closeTaskCreateModal } = useModalStore();
+  const { closeCreateTask } = useModalStore();
+  const { createTask } = useTasks(Number(projectId)); // Use TanStack Query hook
+
   const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    priority: 'Medium' as 'Low' | 'Medium' | 'High',
-    dueDate: ''
+    title: "",
+    description: "",
+    priority: "Medium" as "Low" | "Medium" | "High",
+    dueDate: "",
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await createTask({
-      ...formData,
-      projectId: Number(projectId),
-      dueDate: formData.dueDate ? new Date(formData.dueDate) : undefined
-    });
-    closeTaskCreateModal();
+
+    try {
+      await createTask.mutateAsync({
+        ...formData,
+        projectId: Number(projectId),
+        dueDate: formData.dueDate ? new Date(formData.dueDate) : undefined,
+      });
+      closeCreateTask();
+
+      // Reset form
+      setFormData({
+        title: "",
+        description: "",
+        priority: "Medium",
+        dueDate: "",
+      });
+    } catch (error) {
+      console.error("Error creating task:", error);
+      // Optionally add error handling UI (e.g., toast notifications)
+    }
   };
 
   return (
@@ -40,7 +56,7 @@ export function CreateTaskModal() {
               required
             />
           </div>
-          
+
           <div>
             <label className="block mb-1">Description</label>
             <textarea
@@ -50,12 +66,14 @@ export function CreateTaskModal() {
               rows={3}
             />
           </div>
-          
+
           <div>
             <label className="block mb-1">Priority</label>
             <select
               value={formData.priority}
-              onChange={(e) => setFormData({ ...formData, priority: e.target.value as 'Low' | 'Medium' | 'High' })}
+              onChange={(e) =>
+                setFormData({ ...formData, priority: e.target.value as "Low" | "Medium" | "High" })
+              }
               className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600"
             >
               <option>Low</option>
@@ -63,7 +81,7 @@ export function CreateTaskModal() {
               <option>High</option>
             </select>
           </div>
-          
+
           <div>
             <label className="block mb-1">Due Date</label>
             <input
@@ -73,11 +91,11 @@ export function CreateTaskModal() {
               className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600"
             />
           </div>
-          
+
           <div className="flex justify-end space-x-2">
             <button
               type="button"
-              onClick={closeTaskCreateModal}
+              onClick={closeCreateTask}
               className="px-4 py-2 border rounded hover:bg-gray-100 dark:hover:bg-gray-700"
             >
               Cancel
@@ -85,8 +103,9 @@ export function CreateTaskModal() {
             <button
               type="submit"
               className="px-4 py-2 bg-black text-white dark:bg-white dark:text-black rounded hover:bg-gray-800 dark:hover:bg-gray-200"
+              disabled={createTask.isPending} // Disable button during mutation
             >
-              Create Task
+              {createTask.isPending ? "Creating..." : "Create Task"}
             </button>
           </div>
         </form>

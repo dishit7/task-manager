@@ -3,34 +3,30 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { PlusIcon, LayoutDashboardIcon, FolderIcon } from "lucide-react";
-import { useProjectStore } from "@/stores/projectStore";
 import { useModalStore } from "@/stores/modalStore";
 import { useEffect, useState } from "react";
 import { getUserId } from "@/lib/auth/authUtils";
 import { useRouter } from "next/navigation";
+import { useProjects } from "@/hooks/useProjects";
 
 export function Sidebar() {
-  const { projects,fetchProjects } = useProjectStore();
-    const { openProjectCreateModal } = useModalStore();
-    const router=useRouter()
-    const [userId, setUserId] = useState<string | null>(null)
-    useEffect(() => {
-        const id = getUserId()
-        setUserId(id)
+  const { openCreateProject } = useModalStore();
+  const router = useRouter();
+  const [userId, setUserId] = useState<string | null>(null);
+  const { projects, isLoading } = useProjects(userId || ''); // Pass userId to useProjects
+
+  useEffect(() => {
+    const id = getUserId();
+    setUserId(id);
     if (!id) {
-        router.push("/signin")
-        return
-        }
- 
-    }, []);
-    
-    useEffect(() => {
-        if (userId) {
-        console.log(`userid for fetching is ${userId}`)
-      fetchProjects(userId); // Fetch projects only if userId is available
+      router.push("/signin");
     }
-  }, [userId, fetchProjects]);
-    
+  }, [router]);
+
+  if (isLoading) {
+    return <div className="w-64 p-4 border-r h-screen bg-sidebar dark:bg-sidebar-dark">Loading projects...</div>;
+  }
+
   return (
     <aside className="w-64 p-4 border-r h-screen flex flex-col bg-sidebar dark:bg-sidebar-dark">
       <div className="mb-6">
@@ -50,7 +46,7 @@ export function Sidebar() {
             <Button 
               variant="ghost" 
               size="icon" 
-              onClick={openProjectCreateModal}
+              onClick={openCreateProject}
             >
               <PlusIcon className="h-4 w-4" />
             </Button>

@@ -11,34 +11,32 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useModalStore } from "@/stores/modalStore";
-import { useProjectStore } from "@/stores/projectStore";
+import { useProjects } from "@/hooks/useProjects";
 import { getUserId } from "@/lib/auth/authUtils";
 
 export function ProjectModal() {
   const { 
-    isProjectCreateModalOpen, 
-    isProjectEditModalOpen,
-    selectedProjectToEdit,
-    closeProjectCreateModal,
-    closeProjectEditModal 
+    isCreateProjectOpen, 
+    isEditProjectOpen,
+    selectedProject,
+    closeCreateProject,
+    closeEditProject 
   } = useModalStore();
 
-  const { createProject, updateProject } = useProjectStore(); // Changed method name
-  
+  const { createProject, updateProject } = useProjects(); // Use TanStack Query hooks
+
   const [projectName, setProjectName] = useState(
-    selectedProjectToEdit?.name || ""
+    selectedProject?.name || ""
   );
   const [projectDescription, setProjectDescription] = useState(
-    selectedProjectToEdit?.description || ""
-    );
-    
-    
+    selectedProject?.description || ""
+  );
+
   const userId = getUserId();
-  console.log(`userid is ${userId}`)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const projectData = {
       name: projectName,
       description: projectDescription,
@@ -46,12 +44,14 @@ export function ProjectModal() {
     };
 
     try {
-      if (selectedProjectToEdit) {
-        await updateProject(selectedProjectToEdit.id, projectData);
-        closeProjectEditModal();
+      if (selectedProject) {
+        // Update project
+        await updateProject.mutateAsync({ id: selectedProject.id, data: projectData });
+        closeEditProject();
       } else {
-        await createProject(projectData); // Changed method name
-        closeProjectCreateModal();
+        // Create project
+        await createProject.mutateAsync(projectData);
+        closeCreateProject();
       }
 
       // Reset form
@@ -59,24 +59,24 @@ export function ProjectModal() {
       setProjectDescription("");
     } catch (error) {
       console.error("Error saving project:", error);
-      // Optionally add error handling UI
+      // Optionally add error handling UI (e.g., toast notifications)
     }
   };
 
-  const isOpen = isProjectCreateModalOpen || isProjectEditModalOpen;
-  const onOpenChange = isProjectEditModalOpen 
-    ? closeProjectEditModal 
-    : closeProjectCreateModal;
+  const isOpen = isCreateProjectOpen || isEditProjectOpen;
+  const onOpenChange = isEditProjectOpen 
+    ? closeEditProject 
+    : closeCreateProject;
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>
-            {selectedProjectToEdit ? "Edit Project" : "Create Project"}
+            {selectedProject ? "Edit Project" : "Create Project"}
           </DialogTitle>
           <DialogDescription>
-            {selectedProjectToEdit 
+            {selectedProject 
               ? "Update your project details" 
               : "Create a new project to organize your tasks"}
           </DialogDescription>
@@ -94,8 +94,14 @@ export function ProjectModal() {
             value={projectDescription}
             onChange={(e) => setProjectDescription(e.target.value)}
           />
-          <Button type="submit" className="w-full">
-            {selectedProjectToEdit ? "Update Project" : "Create Project"}
+          <Button 
+            type="submit" 
+            className="w-full"
+            disabled={createProject.isPending || updateProject.isPending} // Disable button during mutation
+          >
+            {selectedProject 
+              ? (updateProject.isPending ? "Updating..." : "Update Project") 
+              : (createProject.isPending ? "Creating..." : "Create Project")}
           </Button>
         </form>
       </DialogContent>

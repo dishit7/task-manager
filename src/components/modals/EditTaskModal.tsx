@@ -1,52 +1,55 @@
-// components/EditTaskModal.tsx
-import { useState, useEffect } from 'react';
-import { useTaskStore } from '@/stores/taskStore';
-import { useModalStore } from '@/stores/modalStore';
+"use client";
+
+import { useState, useEffect } from "react";
+import { useModalStore } from "@/stores/modalStore";
+import { useTasks } from "@/hooks/useTasks";
 
 export function EditTaskModal() {
-  const { updateTask,fetchTasksByProject } = useTaskStore();
-  const { closeTaskEditModal, selectedTaskToEdit } = useModalStore();
+  const { selectedTask, closeEditTask } = useModalStore();
+  const { updateTask } = useTasks(selectedTask?.projectId); // Use TanStack Query hook
 
   const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    priority: 'Medium' as 'Low' | 'Medium' | 'High',
-    dueDate: '',
-    completed: false
+    title: "",
+    description: "",
+    priority: "Medium" as "Low" | "Medium" | "High",
+    dueDate: "",
+    completed: false,
   });
-useEffect(() => {
-  if (!selectedTaskToEdit) return;
 
-  setFormData({
-    title: selectedTaskToEdit.title || '',
-    description: selectedTaskToEdit.description || '',
-    priority: selectedTaskToEdit.priority || 'Medium',
-    dueDate: selectedTaskToEdit.dueDate
-      ? new Date(selectedTaskToEdit.dueDate).toISOString().split('T')[0]
-      : '',
-    completed: selectedTaskToEdit.completed || false,
-  });
-}, [selectedTaskToEdit]);
+  useEffect(() => {
+    if (!selectedTask) return;
+
+    setFormData({
+      title: selectedTask.title || "",
+      description: selectedTask.description || "",
+      priority: selectedTask.priority || "Medium",
+      dueDate: selectedTask.dueDate
+        ? new Date(selectedTask.dueDate).toISOString().split("T")[0]
+        : "",
+      completed: selectedTask.completed || false,
+    });
+  }, [selectedTask]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedTaskToEdit) return;
+    if (!selectedTask) return;
 
-    await updateTask(Number(selectedTaskToEdit.id), {
-      ...formData,
-      dueDate: formData.dueDate ? new Date(formData.dueDate) : undefined
-    });
-      
-      if (selectedTaskToEdit.projectId) {
-                   await fetchTasksByProject(selectedTaskToEdit.projectId);
-
-       
-       }
- 
-    closeTaskEditModal();
+    try {
+      await updateTask.mutateAsync({
+        id: selectedTask.id,
+        data: {
+          ...formData,
+          dueDate: formData.dueDate ? new Date(formData.dueDate) : undefined,
+        },
+      });
+      closeEditTask();
+    } catch (error) {
+      console.error("Error updating task:", error);
+      // Optionally add error handling UI (e.g., toast notifications)
+    }
   };
 
-  if (!selectedTaskToEdit) return null;
+  if (!selectedTask) return null;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -54,10 +57,10 @@ useEffect(() => {
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold">Edit Task</h2>
           <button
-            onClick={closeTaskEditModal}
+            onClick={closeEditTask}
             className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
           >
-            ✕
+            
           </button>
         </div>
 
@@ -87,7 +90,9 @@ useEffect(() => {
             <label className="block mb-1 text-sm font-medium">Priority</label>
             <select
               value={formData.priority}
-              onChange={(e) => setFormData({ ...formData, priority: e.target.value as 'Low' | 'Medium' | 'High' })}
+              onChange={(e) =>
+                setFormData({ ...formData, priority: e.target.value as "Low" | "Medium" | "High" })
+              }
               className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
             >
               <option>Low</option>
@@ -122,7 +127,7 @@ useEffect(() => {
           <div className="flex justify-end space-x-2 pt-4">
             <button
               type="button"
-              onClick={closeTaskEditModal}
+              onClick={closeEditTask}
               className="px-4 py-2 border rounded hover:bg-gray-100 dark:hover:bg-gray-700 dark:border-gray-600"
             >
               Cancel
@@ -130,12 +135,13 @@ useEffect(() => {
             <button
               type="submit"
               className="px-4 py-2 bg-black text-white dark:bg-white dark:text-black rounded hover:bg-gray-800 dark:hover:bg-gray-200"
+              disabled={updateTask.isPending} // Disable button during mutation
             >
-              Save Changes
+              {updateTask.isPending ? "Saving..." : "Save Changes"}
             </button>
           </div>
         </form>
       </div>
     </div>
   );
-} 
+}

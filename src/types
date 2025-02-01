@@ -1,0 +1,7 @@
+type Task = {
+  id: string;
+  title: string;
+  completed: boolean;
+  priority: "Low" | "Medium" | "High";
+  dueDate?: string;
+};
