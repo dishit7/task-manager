@@ -32,7 +32,7 @@ export async function POST(req: Request) {
     }
 
     // If valid, return success
-    return NextResponse.json({ message: 'Login successful', user: user[0] });
+    return NextResponse.json({ message: 'Login successful', user: user[0] ,userId: user[0].id });
 
   } catch (error) {
     console.error(error);

@@ -26,8 +26,15 @@ const SignUp = () => {
         throw new Error('Failed to register');
       }
 
-      // Redirect or show success message
+      const data = await response.json();
+
+      // Store the userId and token in localStorage or sessionStorage
+      localStorage.setItem('userId', data.userId);
+      localStorage.setItem('token', data.token);
+
+      // Redirect user to dashboard
       alert('Registration successful!');
+      window.location.href = '/dashboard';
     } catch (err: any) {
       setError(err.message);
     } finally {
