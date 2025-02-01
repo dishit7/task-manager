@@ -2,18 +2,21 @@
 
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { PlusIcon, LayoutDashboardIcon, FolderIcon } from "lucide-react";
+import { PlusIcon, LayoutDashboardIcon, FolderIcon, SunIcon, MoonIcon } from "lucide-react";
 import { useModalStore } from "@/stores/modalStore";
 import { useEffect, useState } from "react";
 import { getUserId } from "@/lib/auth/authUtils";
 import { useRouter } from "next/navigation";
 import { useProjects } from "@/hooks/useProjects";
+import { useTheme } from "next-themes";
 
 export function Sidebar() {
   const { openCreateProject } = useModalStore();
   const router = useRouter();
   const [userId, setUserId] = useState<string | null>(null);
-  const { projects, isLoading } = useProjects(userId || ''); // Pass userId to useProjects
+ const { projects, isLoading } = useProjects(userId || ''); // Pass userId to useProjects
+  const { theme, setTheme } = useTheme(); // Theme toggle logic
+
 
   useEffect(() => {
     const id = getUserId();
@@ -64,7 +67,15 @@ export function Sidebar() {
             </Link>
           ))}
         </div>
-      </div>
+          </div>
+           <Button 
+        variant="ghost" 
+        size="icon"
+        onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+        className="mt-auto p-2 h-10 w-10"
+      >
+        {theme === "dark" ? <SunIcon className="h-10 w-10" /> : <MoonIcon className="h-7 w-7" />}
+      </Button>
     </aside>
   );
 }
