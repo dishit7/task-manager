@@ -27,12 +27,13 @@ const SignIn = () => {
 
       const data = await response.json();
 
-      // Store the token in localStorage or sessionStorage
+      // Store the userId and token in localStorage or sessionStorage
+      localStorage.setItem('userId', data.userId);
       localStorage.setItem('token', data.token);
 
-      // Redirect user to dashboard or home
+      // Redirect user to dashboard
       alert('Login successful!');
-      window.location.href = '/dashboard'; // You can change the redirect path
+      window.location.href = '/dashboard';
     } catch (err: any) {
       setError(err.message);
     } finally {

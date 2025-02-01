@@ -1,55 +1,74 @@
-'use client'
-import { useState } from "react";
+"use client";
+
 import Link from "next/link";
-import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-import { Plus, LayoutDashboard, Calendar1 } from "lucide-react";
+import { PlusIcon, LayoutDashboardIcon, FolderIcon } from "lucide-react";
+import { useProjectStore } from "@/stores/projectStore";
+import { useModalStore } from "@/stores/modalStore";
+import { useEffect, useState } from "react";
+import { getUserId } from "@/lib/auth/authUtils";
+import { useRouter } from "next/navigation";
 
-const projects = [
-  { id: "1", name: "Project Alpha" },
-  { id: "2", name: "Project Beta" },
-];
-
-export default function Sidebar() {
-  const [selectedProject, setSelectedProject] = useState<string | null>(null);
-
+export function Sidebar() {
+  const { projects,fetchProjects } = useProjectStore();
+    const { openProjectCreateModal } = useModalStore();
+    const router=useRouter()
+    const [userId, setUserId] = useState<string | null>(null)
+    useEffect(() => {
+        const id = getUserId()
+        setUserId(id)
+    if (!id) {
+        router.push("/signin")
+        return
+        }
+ 
+    }, []);
+    
+    useEffect(() => {
+        if (userId) {
+        console.log(`userid for fetching is ${userId}`)
+      fetchProjects(userId); // Fetch projects only if userId is available
+    }
+  }, [userId, fetchProjects]);
+    
   return (
-    <aside className="w-64 h-screen bg-gray-900 text-white flex flex-col p-4 border-r border-gray-700">
-      {/* Dashboard Link */}
-      <Link href="/dashboard" className="flex items-center gap-2 text-lg font-bold mb-4">
-        <LayoutDashboard className="w-5 h-5" /> Dashboard
-      </Link>
+    <aside className="w-64 p-4 border-r h-screen flex flex-col bg-sidebar dark:bg-sidebar-dark">
+      <div className="mb-6">
+        {/* Dashboard Link */}
+        <Link 
+          href="/dashboard" 
+          className="flex items-center mb-4 hover:bg-sidebarHover dark:hover:bg-sidebarHover-dark p-2 rounded"
+        >
+          <LayoutDashboardIcon className="mr-2" />
+          Dashboard
+        </Link>
 
-      {/* Create Project Button */}
-      <Button className="w-full mb-4 flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700">
-        <Plus className="w-4 h-4" /> Create Project
-      </Button>
-
-      {/* Project List */}
-      <div className="flex-1 overflow-auto">
-        <h3 className="text-sm uppercase text-gray-400 mb-2">Projects</h3>
-        <ul>
-          {projects.map((project) => (
-            <li key={project.id}>
-              <button
-                className={cn(
-                  "w-full text-left px-3 py-2 rounded-md hover:bg-gray-800",
-                  selectedProject === project.id ? "bg-gray-700" : ""
-                )}
-                onClick={() => setSelectedProject(project.id)}
-              >
-                {project.name}
-              </button>
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      {/* Calendar Widget */}
-      <div className="mt-4 border-t border-gray-700 pt-4">
-        <h3 className="text-sm uppercase text-gray-400 mb-2">Calendar<Calendar1/></h3>
+        {/* Projects Section */}
+        <div className="mb-4">
+          <div className="flex justify-between items-center mb-2">
+            <h2 className="text-sm font-semibold text-gray-600 dark:text-gray-200">Projects</h2>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={openProjectCreateModal}
+            >
+              <PlusIcon className="h-4 w-4" />
+            </Button>
           </div>
+
+          {/* Project List */}
+          {projects.map((project) => (
+            <Link 
+              key={project.id} 
+              href={`/project/${project.id}`}
+              className="flex items-center mb-2 hover:bg-sidebarHover dark:hover:bg-sidebarHover-dark p-2 rounded"
+            >
+              <FolderIcon className="mr-2 h-4 w-4" />
+              {project.name}
+            </Link>
+          ))}
+        </div>
+      </div>
     </aside>
   );
 }

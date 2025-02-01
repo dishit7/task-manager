@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   description: "Manage your tasks and projects effectively.",
 };
 
-export default function DashboardLayout({
+export default function ProjectLayout({
   children,
 }: {
   children: React.ReactNode;
