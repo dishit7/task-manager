@@ -33,6 +33,11 @@ export function ProjectModal() {
   );
 
   const userId = getUserId();
+  if (!userId) {
+    console.error("User ID is required");
+    return; // Stop execution if userId is null
+  }
+ 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,7 +51,7 @@ export function ProjectModal() {
     try {
       if (selectedProject) {
         // Update project
-        await updateProject.mutateAsync({ id: selectedProject.id, data: projectData });
+        await updateProject.mutateAsync({ id: String(selectedProject.id), data: projectData });
         closeEditProject();
       } else {
         // Create project

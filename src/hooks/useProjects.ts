@@ -1,6 +1,7 @@
 // hooks/useProjects.ts
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { projectService } from '@/services/api';
+import { Project } from '@/types/types';
 
 export function useProjects(userId?: string) {
   const queryClient = useQueryClient();
@@ -14,12 +15,17 @@ export function useProjects(userId?: string) {
     enabled: !!userId, // Only fetch projects if userId is available
   });
 
-  const createProject = useMutation({
+ const createProject = useMutation({
     mutationFn: projectService.create,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['projects', userId] });
+    onSuccess: (newProject) => {
+       queryClient.invalidateQueries({ queryKey: ['projects', userId] });
+
+       queryClient.setQueryData(['projects', userId], (oldData: Project[] | undefined) => {
+        return oldData ? [...oldData, newProject] : [newProject];
+      });
     },
   });
+
 
   const updateProject = useMutation({
     mutationFn: ({ id, data }: { id: string; data: Partial<Project> }) => 

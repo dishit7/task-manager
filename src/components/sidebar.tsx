@@ -9,6 +9,7 @@ import { getUserId } from "@/lib/auth/authUtils";
 import { useRouter } from "next/navigation";
 import { useProjects } from "@/hooks/useProjects";
 import { useTheme } from "next-themes";
+import { Project } from "@/types/types";
 
 export function Sidebar() {
   const { openCreateProject } = useModalStore();
@@ -56,7 +57,7 @@ export function Sidebar() {
           </div>
 
           {/* Project List */}
-          {projects.map((project) => (
+          {projects.map((project:Project) => (
             <Link 
               key={project.id} 
               href={`/project/${project.id}`}
@@ -68,14 +69,20 @@ export function Sidebar() {
           ))}
         </div>
           </div>
-           <Button 
-        variant="ghost" 
-        size="icon"
-        onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-        className="mt-auto p-2 h-10 w-10"
-      >
-        {theme === "dark" ? <SunIcon className="h-10 w-10" /> : <MoonIcon className="h-7 w-7" />}
-      </Button>
+         <div className="mt-auto flex flex-col items-center">
+        <div className="text-sm font-semibold text-gray-600 dark:text-gray-200 mb-2">
+          Toggle Theme
+        </div>
+        <Button 
+          variant="ghost" 
+          size="lg"  
+          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+          className="p-4 bg-sidebarHover dark:bg-sidebarHover-dark rounded-full hover:bg-sidebarHover dark:hover:bg-sidebarHover-dark focus:outline-none border-2 border-gray-400"
+          aria-label="Toggle theme"
+        >
+          {theme === "dark" ? <SunIcon className="h-10 w-10 text-yellow-500" /> : <MoonIcon className="h-10 w-10 text-gray-800" />}
+        </Button>
+      </div>
     </aside>
   );
 }

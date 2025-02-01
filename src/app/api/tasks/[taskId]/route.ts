@@ -6,10 +6,12 @@ import { NextResponse } from 'next/server';
 // GET: Fetch a single task
 export async function GET(
   req: Request,
-  { params }: { params: { taskId: string } }
+  context: any // Explicitly allowing `any` for flexibility
 ) {
-  const taskId =  parseInt(params.taskId);
-  console.log(`taskid is ${taskId} `)
+  const { params } = context as { params: { taskId: string } }; // Explicit type assertion
+  const taskId = parseInt(params.taskId, 10);
+  console.log(`taskId is ${taskId}`);
+
   try {
     const task = await db
       .select()
@@ -28,12 +30,14 @@ export async function GET(
   }
 }
 
+
 // PUT: Update a task
 export async function PUT(
   req: Request,
-  { params }: { params: { taskId: string } }
+  context: any // Explicitly allowing `any` for flexibility
 ) {
-  const taskId = parseInt(params.taskId);
+  const { params } = context as { params: { taskId: string } }; // Explicit type assertion
+  const taskId = parseInt(params.taskId, 10);
   const { title, description, completed, priority, dueDate } = await req.json();
 
   try {
@@ -42,12 +46,12 @@ export async function PUT(
 
     await db
       .update(tasks)
-      .set({ 
-        title, 
-        description, 
-        completed, 
-        priority, 
-        dueDate: parsedDueDate 
+      .set({
+        title,
+        description,
+        completed,
+        priority,
+        dueDate: parsedDueDate
       })
       .where(eq(tasks.id, taskId))
       .execute();
@@ -60,11 +64,13 @@ export async function PUT(
 }
 
 
+
 export async function PATCH(
   req: Request,
-  { params }: { params: { taskId: string } }
+  context: any // Explicitly allowing `any` for flexibility
 ) {
-  const taskId = parseInt(params.taskId);
+  const { params } = context as { params: { taskId: string } }; // Explicit type assertion
+  const taskId = parseInt(params.taskId, 10);
 
   try {
     // Fetch the current task state
@@ -94,12 +100,14 @@ export async function PATCH(
   }
 }
 
+
 // DELETE: Remove a task
 export async function DELETE(
   req: Request,
-  { params }: { params: { taskId: string } }
+  context: any // Explicitly allowing `any` for flexibility
 ) {
-  const taskId = parseInt(params.taskId);
+  const { params } = context as { params: { taskId: string } }; // Explicit type assertion
+  const taskId = parseInt(params.taskId, 10);
 
   try {
     await db.delete(tasks).where(eq(tasks.id, taskId)).execute();
@@ -108,3 +116,4 @@ export async function DELETE(
     return NextResponse.json({ error: 'Failed to delete task' }, { status: 500 });
   }
 }
+

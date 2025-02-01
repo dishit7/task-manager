@@ -2,24 +2,26 @@
 
 import { useState } from "react";
 import { useTasks } from "@/hooks/useTasks";
-import { Task } from "@/types";
+import { Task, priorityMap } from "@/types/types";
 import { Calendar } from "@/components/ui/calendar";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Calendar as CalendarComponent } from "@/components/ui/calendar"
-
+import { Badge } from "@/components/ui/badge";
 
 export default function DashboardPage() {
-  const { tasks, isLoading } = useTasks(); // Fetch all tasks
+  const { tasks, isLoading } = useTasks();
   const [searchQuery, setSearchQuery] = useState("");
   const [filterPriority, setFilterPriority] = useState<"All" | "Low" | "Medium" | "High">("All");
   const [filterStatus, setFilterStatus] = useState<"All" | "Completed" | "Incomplete">("All");
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Filter tasks based on search query, priority, and status
-  const filteredTasks = tasks.filter((task) => {
+  const filteredTasks = tasks.filter((task:Task) => {
     const matchesSearch = task.title.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesPriority = filterPriority === "All" || task.priority === filterPriority;
     const matchesStatus =
@@ -27,27 +29,43 @@ export default function DashboardPage() {
     return matchesSearch && matchesPriority && matchesStatus;
   });
 
-  // Calculate task statistics
-  const totalTasks = tasks.length;
-  const completedTasks = tasks.filter((task) => task.completed).length;
-  const overdueTasks = tasks.filter((task) => task.dueDate && new Date(task.dueDate) < new Date()).length;
+  // Calculate task statistics based on filtered tasks
+  const totalTasks = filteredTasks.length;
+  const completedTasks = filteredTasks.filter((task:Task) => task.completed).length;
+  const overdueTasks = filteredTasks.filter(
+    (task:Task) => task.dueDate && new Date(task.dueDate) < new Date()
+  ).length;
 
   // Calculate task completion progress
   const completionProgress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
-  // Get upcoming deadlines (tasks due in the next 7 days)
-  const upcomingDeadlines = tasks
-    .filter((task) => task.dueDate && new Date(task.dueDate) > new Date())
-    .sort((a, b) => new Date(a.dueDate!).getTime() - new Date(b.dueDate!).getTime())
-    .slice(0, 5); // Show only the top 5 upcoming tasks
+  // Group tasks by date for the calendar
+  const tasksByDate = tasks.reduce((acc: { [key: string]: Task[] }, task:any) => {
+    if (task.dueDate) {
+      const dateKey = new Date(task.dueDate).toISOString().split('T')[0];
+      if (!acc[dateKey]) {
+        acc[dateKey] = [];
+      }
+      acc[dateKey].push(task);
+    }
+    return acc;
+  }, {});
 
-  // Format tasks for the calendar widget
-  const calendarEvents = tasks
-    .filter((task) => task.dueDate) // Only include tasks with due dates
-    .map((task) => ({
-      title: task.title,
-      date: new Date(task.dueDate!), // Ensure date is in the correct format
-    }));
+  // Get tasks for selected date
+  const selectedDateTasks = selectedDate
+    ? tasksByDate[selectedDate.toISOString().split('T')[0]] || []
+    : [];
+
+  const handleDateClick = (date: Date | undefined) => {
+    setSelectedDate(date);
+    setIsModalOpen(true);
+  };
+
+  // Function to get task count for a specific date
+  const getTaskCountForDate = (date: Date): number => {
+    const dateKey = date.toISOString().split('T')[0];
+    return tasksByDate[dateKey]?.length || 0;
+  };
 
   return (
     <div className="p-6 space-y-6">
@@ -96,7 +114,7 @@ export default function DashboardPage() {
 
       {/* Task Statistics */}
       {!isLoading && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <Card>
             <CardHeader>
               <CardTitle>Total Tasks</CardTitle>
@@ -121,137 +139,98 @@ export default function DashboardPage() {
               <p className="text-4xl font-bold">{overdueTasks}</p>
             </CardContent>
           </Card>
+         
         </div>
       )}
 
-      {/* Task Completion Progress */}
-      {!isLoading && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Task Completion Progress</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Progress value={completionProgress} className="h-3" />
-            <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-              {completionProgress}% of tasks completed
-            </p>
-          </CardContent>
-        </Card>
-      )}
+      {/* Calendar */}
+     {/* Calendar & Progress Cards in a Grid */}
+<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+  {/* Calendar */}
+  {!isLoading && (
+    <Card className="col-span-1">
+      <CardHeader>
+        <CardTitle>Task Calendar</CardTitle>
+        <CardDescription>Click on a date to view tasks</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Calendar
+          mode="single"
+          selected={selectedDate}
+          onSelect={handleDateClick}
+          modifiers={{
+            hasTasks: (date) => getTaskCountForDate(date) > 0,
+          }}
+          modifiersStyles={{
+            hasTasks: {
+              fontWeight: "bold",
+              backgroundColor: "rgba(59, 130, 246, 0.1)",
+            },
+          }}
+          className="rounded-md border"
+        />
+      </CardContent>
+    </Card>
+  )}
 
-      {/* Upcoming Deadlines */}
-      {!isLoading && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Upcoming Deadlines</CardTitle>
-            <CardDescription>Tasks due in the next 7 days</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {upcomingDeadlines.length > 0 ? (
-              <ul className="space-y-2">
-                {upcomingDeadlines.map((task) => (
-                  <li key={task.id} className="flex justify-between items-center">
-                    <span>{task.title}</span>
-                    <span className="text-sm text-gray-600 dark:text-gray-400">
-                      Due: {new Date(task.dueDate!).toLocaleDateString()}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-gray-600 dark:text-gray-400">No upcoming deadlines</p>
-            )}
-          </CardContent>
-        </Card>
-      )}
-
- 
- {/* Calendar Widget */}
-{!isLoading && (
-  <Card>
+  {/* Progress Bar */}
+  <Card className="col-span-1">
     <CardHeader>
-      <CardTitle>Task Calendar</CardTitle>
-      <CardDescription>View tasks in a calendar</CardDescription>
+      <CardTitle>Progress</CardTitle>
     </CardHeader>
     <CardContent>
-      <CalendarComponent 
-        mode="single"
-        selected={new Date()}
-        modifiers={{
-          task: calendarEvents.map(event => event.date)
-        }}
-        modifiersStyles={{
-          task: {
-            backgroundColor: 'rgba(59, 130, 246, 0.1)',
-            borderRadius: '0',
-            color: 'rgb(59, 130, 246)',
-          }
-        }}
-      />
-      <div className="mt-4">
-        {calendarEvents
-          .filter(event => 
-            event.date.toDateString() === new Date().toDateString()
-          )
-          .map((event, index) => (
-            <div key={index} className="text-sm p-2 bg-blue-50 rounded mt-1">
-              {event.title}
-            </div>
-          ))}
-      </div>
+      <Progress value={completionProgress} className="h-3" />
+      <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+        {completionProgress}% completed
+      </p>
     </CardContent>
   </Card>
-)}
-      {/* No Tasks Found */}
- {/* Filtered Tasks List */}
+</div>
 
-      {/* Filtered Tasks List */}
-      {!isLoading && filteredTasks.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Tasks</CardTitle>
-            <CardDescription>Filtered results ({filteredTasks.length} tasks)</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {filteredTasks.map((task) => (
+
+      {/* Tasks Modal */}
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>
+              Tasks for {selectedDate?.toLocaleDateString()}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            {selectedDateTasks.length > 0 ? (
+              selectedDateTasks.map((task:Task) => (
                 <div
                   key={task.id}
                   className="flex justify-between items-center p-4 border rounded-lg"
                 >
-                  <div className="flex items-center space-x-4">
-                    <input
-                      type="checkbox"
-                      checked={task.completed}
-                      readOnly
-                      className="h-4 w-4"
-                    />
-                    <span className={task.completed ? "line-through text-gray-500" : ""}>
+                  <div className="space-y-1">
+                    <h3 className={`font-medium ${task.completed ? "line-through text-gray-500" : ""}`}>
                       {task.title}
-                    </span>
+                    </h3>
+                    <p className="text-sm text-gray-500">{task.description}</p>
                   </div>
-                  <div className="flex items-center space-x-4">
-                    <span className={`px-2 py-1 rounded text-sm ${
-                      task.priority === "High" 
-                        ? "bg-red-100 text-red-800" 
-                        : task.priority === "Medium"
-                        ? "bg-yellow-100 text-yellow-800"
-                        : "bg-green-100 text-green-800"
-                    }`}>
-                      {task.priority}
-                    </span>
-                    {task.dueDate && (
-                      <span className="text-sm text-gray-600">
-                        Due: {new Date(task.dueDate).toLocaleDateString()}
-                      </span>
-                    )}
+                  <div className="flex items-center gap-2">
+                 <Badge variant={
+  task.priority === "High" ? "destructive" :
+  task.priority === "Medium" ? "secondary" : "secondary" // Adjust here
+}>
+  {task.priority}
+</Badge>
+
+                  <Badge variant={task.completed ? "secondary" : "outline"}>
+  {task.completed ? "Completed" : "Pending"}
+</Badge>
+
                   </div>
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+              ))
+            ) : (
+              <p className="text-center text-gray-500">No tasks scheduled for this date</p>
+            )}
+          </div>
+        </DialogContent>
+          </Dialog>
+          
     </div>
   );
 }

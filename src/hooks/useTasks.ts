@@ -1,6 +1,7 @@
 // hooks/useTasks.ts
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { taskService } from '@/services/api';
+import { Task } from '@/types/types';
 
 export function useTasks(projectId?: number) {
   const queryClient = useQueryClient();

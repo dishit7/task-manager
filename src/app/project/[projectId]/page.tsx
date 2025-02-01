@@ -8,6 +8,7 @@ import { useModalStore } from '@/stores/modalStore';
 import { useTaskStore } from '@/stores/taskStore';
 import { getUserId } from '@/lib/auth/authUtils';
 import { useEffect, useState } from 'react';
+import { Project } from '@/types/types';
 
 export default function ProjectPage() {
   const params = useParams();
@@ -24,7 +25,7 @@ export default function ProjectPage() {
 
   console.log(`prijects are ${JSON.stringify(projects)}`)
  
-  const project = projects?.find(p => p.id == projectId);
+  const project = projects?.find((p:Project) => p.id == projectId);
 
   if (projectsLoading) {
     return <div className="p-4">Loading project...</div>;

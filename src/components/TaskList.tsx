@@ -1,4 +1,4 @@
-import { Task } from '@/types';
+import { Task } from '@/types/types';
 import { useModalStore } from '@/stores/modalStore';
 import { useTasks } from '@/hooks/useTasks';
 import { useTaskStore } from '@/stores/taskStore';
@@ -19,11 +19,19 @@ export function TaskList({ projectId }: { projectId: string }) {
           return sortDirection === 'asc' 
             ? new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()
             : new Date(b.dueDate).getTime() - new Date(a.dueDate).getTime();
-        case 'priority':
-          const priorityMap = { Low: 1, Medium: 2, High: 3 };
-          return sortDirection === 'asc'
-            ? priorityMap[a.priority] - priorityMap[b.priority]
-            : priorityMap[b.priority] - priorityMap[a.priority];
+        case 'priority': {
+  const priorityMap: { Low: number; Medium: number; High: number } = {
+    Low: 1,
+    Medium: 2,
+    High: 3,
+  };
+
+  // Ensure a.priority and b.priority are explicitly typed as keyof priorityMap
+  return sortDirection === 'asc'
+    ? priorityMap[a.priority as keyof typeof priorityMap] - priorityMap[b.priority as keyof typeof priorityMap]
+    : priorityMap[b.priority as keyof typeof priorityMap] - priorityMap[a.priority as keyof typeof priorityMap];
+}
+
         case 'title':
           return sortDirection === 'asc'
             ? a.title.localeCompare(b.title)

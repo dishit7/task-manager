@@ -1,7 +1,6 @@
 // stores/projectStore.ts
 import { create } from 'zustand';
-import { Project } from '@/types';
-
+ 
 interface ProjectStore {
   selectedProjectId: string | null;
   viewMode: 'list' | 'board' | 'calendar';

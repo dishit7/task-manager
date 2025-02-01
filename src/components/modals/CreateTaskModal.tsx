@@ -6,7 +6,7 @@ import { useModalStore } from "@/stores/modalStore";
 import { useTasks } from "@/hooks/useTasks";
 
 export function CreateTaskModal() {
-  const { projectId } = useParams();
+  const { projectId } = useParams()as { projectId?: string }; ;
   const { closeCreateTask } = useModalStore();
   const { createTask } = useTasks(Number(projectId)); // Use TanStack Query hook
 
@@ -23,8 +23,8 @@ export function CreateTaskModal() {
     try {
       await createTask.mutateAsync({
         ...formData,
-        projectId: Number(projectId),
-        dueDate: formData.dueDate ? new Date(formData.dueDate) : undefined,
+        projectId:  projectId,
+        dueDate: formData.dueDate ? new Date(formData.dueDate).toISOString() : undefined,
       });
       closeCreateTask();
 

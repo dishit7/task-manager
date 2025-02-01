@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { Task } from '@/types';
+import { Task } from '@/types/types';
 
 interface TaskStore {
   selectedTask: Task | null;
@@ -19,5 +19,5 @@ export const useTaskStore = create<TaskStore>((set) => ({
   
   setSelectedTask: (task) => set({ selectedTask: task }),
   setSortBy: (sortBy) => set({ sortBy }),
-  setSortDirection: (direction) => set({ sortDirection }),
+  setSortDirection: (direction) => set({ sortDirection:direction }),
 }));

@@ -3,10 +3,16 @@
 import { useState, useEffect } from "react";
 import { useModalStore } from "@/stores/modalStore";
 import { useTasks } from "@/hooks/useTasks";
+import { Task } from "@/types/types";
 
-export function EditTaskModal() {
+interface EditTaskModalProps {
+  task: Task;  
+}
+
+
+export function EditTaskModal ({ task }: EditTaskModalProps) {
   const { selectedTask, closeEditTask } = useModalStore();
-  const { updateTask } = useTasks(selectedTask?.projectId); // Use TanStack Query hook
+  const { updateTask } = useTasks(Number(selectedTask?.projectId)); // Use TanStack Query hook
 
   const [formData, setFormData] = useState({
     title: "",
@@ -36,10 +42,10 @@ export function EditTaskModal() {
 
     try {
       await updateTask.mutateAsync({
-        id: selectedTask.id,
+        id:Number( selectedTask.id),
         data: {
           ...formData,
-          dueDate: formData.dueDate ? new Date(formData.dueDate) : undefined,
+        dueDate: formData.dueDate ? new Date(formData.dueDate).toISOString() : undefined,
         },
       });
       closeEditTask();

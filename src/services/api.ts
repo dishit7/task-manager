@@ -1,6 +1,6 @@
 // services/api.ts
 import axios from 'axios';
-import { Task, Project } from './types';
+import { Task, Project } from '@/types/types';
 
 export const taskService = {
     getAll: async () => {

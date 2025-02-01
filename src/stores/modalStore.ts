@@ -1,6 +1,6 @@
 // stores/modalStore.ts
 import { create } from 'zustand';
-import { Task, Project } from '@/types';
+import { Task, Project } from '@/types/types';
 
 interface ModalStore {
   // Modal visibility states
