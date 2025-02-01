@@ -5,7 +5,8 @@ export type Task = {
   priority: "Low" | "Medium" | "High";
   dueDate?: string;
     projectId: string;
-    description:string
+    description: string;
+    userId:string
 };
 // src/types/types.ts
  

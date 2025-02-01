@@ -26,8 +26,9 @@ export const taskPriorityEnum = pgEnum('priority', ['Low', 'Medium', 'High']);
   description: text("description"),
   dueDate: timestamp("due_date"),
   completed: boolean("completed").default(false).notNull(),
-  priority: taskPriorityEnum("priority").default('Medium'), // Adding priority field
+  priority: taskPriorityEnum("priority").default('Medium'),  
   projectId: integer("project_id").references(() => projects.id, { onDelete: "cascade" }),
+  userId: uuid("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),  
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
